@@ -1,3 +1,5 @@
+# To execute the code, launch Simulation()
+
 import random
 import collections
 import matplotlib.pyplot as plt
@@ -5,22 +7,22 @@ import numpy as np
 
 global list_edges_G, list_nodes_G, list_edges_ST, list_nodes_ST, i, j
 
-# Echelle simple à 2 barreaux
+# Ladder with 2 steps
 # list_edges_G=[[(1,2),(1,3),(2,3),(2,4),(3,6),(4,5),(4,6),(5,6)]]
 # list_nodes_G=[[1,2,3,4,5,6]]
 
-# Graphe K4 (triangle)
+# Graph K4 (triangle)
 list_edges_G=[[(1,2),(1,3),(1,4),(2,3),(2,4),(3,4)]]
 list_nodes_G=[[1,2,3,4]] 
-# Nombre de permutations différentes que l'on va considérer
+# Number of permutations considered
 i=25
-# Nombre d'essais sur une permutation
+# Number of try on one permutation
 j=25
-# Liste d'arêtes et noeuds du ST
+# List of Nodes and Edges of the Spanning Tree
 list_edges_ST=[]
 list_nodes_ST=[]
 
-# Definition de la fonction générant un ordre aléatoire sur les arêtes d'un graphe
+# Function creating a random order on the edges of the graph
 
 def GenAle():
     l=len(list_edges_G[0])
@@ -33,9 +35,7 @@ def GenAle():
             list_alea.append(list_edges_G[0][j])
     return list_alea      
 
-# Definition de la fonction générant une arète du graphe de manière aléatoire, puis 
-
-# Definition de la fonction d'insertion d'une arête
+# Function inserting an edge to the graph
 
 def insert(edge_in):
     
@@ -144,37 +144,39 @@ def insert(edge_in):
     
     #print(list_nodes_ST)
     
-# Definition de la fonction verifiant si l'on a un cycle et renvoyant sa longueur
-# avant le rajout d'une arete, on utilise un parcours en largeur
+# Function checking if there is a cycle et returnind his length before adding an edge
+# Use a Breadth First Search
 
 def Detect_cycle(edge_in):
     a=edge_in[0]
     b=edge_in[1]
     # Mise à jour d'une variable disant si l'on a ou non trouvé un cycle
+    # Updating the variable showing if a cycle have been found or not
     boolcycle=False
-    # Le cycle est donné sous la forme d'une liste d'arêtes
+    # Cycle is given as a list of edges
     cycle=[]
     for i in range(len(list_nodes_ST)):
         if a in list_nodes_ST[i] and b in list_nodes_ST[i]:
-            # Si les 2 éxtrémités de l'arête ajoutée sont dans la même CC, on a un cycle
+            # If both the 2 incident nodes of the added edge are in the same connex component, we have a cycle
             boolcycle=True
-            # On colorie les noeuds par:
-            # -blanc s'ils n'ont pas été traités, ni vus
-            # -gris s'ils sont dans la fle d'attente Q, càd vus mais pas encore traités
-            # -noir s'ils ont été traités
+            # We color nodes with :
+            # - white if they have not been processed
+            # - grey if they are in the queue area
+            # - black if they have been processed
             couleur=dict()
             for x in list_nodes_ST[i]:
                 couleur[x]='blanc'
-            # On retient qui est le parent d'un noeud dans le parcours de l'arbre enraciné en a gràce à P
+            # Remembering which node is parent of another in the tree with root a with a dictionnary P
             P=dict()
             P[a]=None
             couleur[a]='gris'
             Q=[a]
-            # On boucle tant qu'on n'a pas atteint b: si l'arbre est un chemin, on vérifie que la file d'attente est vide
+            # Looping while we didn't arrive to b : if the tree is a simple trail,
+            # checking if the queue area is empty
             while couleur[b]=='blanc':
                 u=Q[0]
                 for j in range(0, len(list_edges_ST[i])):
-                    # Si u est éxtrémité d'une arête, on colorie l'autre éxtrémité en gris et on met u comme son parent
+                    # If u is incident to an edge, coloring in grey and let u be his parent
                     if u==list_edges_ST[i][j][0]:
                         if couleur[list_edges_ST[i][j][1]]=='blanc':
                             P[list_edges_ST[i][j][1]]=u
@@ -185,25 +187,26 @@ def Detect_cycle(edge_in):
                             P[list_edges_ST[i][j][0]]=u
                             couleur[list_edges_ST[i][j][0]]='gris'
                             Q.append(list_edges_ST[i][j][0])
-                # On colorie u en noir et on l'enlève de la file d'attente ; u a bien été traité
+                # Coloring u in black and removing it from queue area : u has been processed
                 Q.remove(u)
                 couleur[u]='noir'
             cycle=[(a,b),(b,u)]
-            # On remonte de b jusqu"à a en suivant les parents
+            # Going to b from a following the parents
             while u!=a:
                 cycle.append((u,P[u]))
                 u=P[u]
             break
     return [boolcycle, cycle, len(cycle)]
     
-# Definition de la suppression d'une arete d'un cycle de maniere uniforme en rajoutant cette arête
+
+#  Function deleting an edge from a cycle (if there is a new one) random uniformly after adding the edge in parameter
 
 def Suppr_unif(edge_in):
-    # Détection d'un cycle ou non UNIQUEMENT
-    ans=Detect_cycle(edge_in)
-    # On insère seulement maintenant 
+    # Detect if there is a cycle or not
+    ans=Detect_cycle(edge_in) 
+    # inserting
     insert(edge_in)
-    # Si on a un cycle, on supprime une arête de ce cycle aléatoirement
+    # if there is a cycle, deleting an edge of it random uniformly
     if ans[0]:
         p=random.randint(0, ans[2]-1)
         for q in range(len(list_edges_ST)):
@@ -218,6 +221,7 @@ def Suppr_unif(edge_in):
     
 # Definition de la fonction rajoutant un arbre à un dictionnaire
 # comptant le nombre d'occurences de chaque arbre
+# Function adding a tree to a dictionnary that counts appearances of each tree
 
 def Rajoute_ST(dict_ST, ST):
     if ST in dict_ST:
